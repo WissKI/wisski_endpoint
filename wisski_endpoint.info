@@ -1,0 +1,6 @@
+; $Id$
+name = WissKI Endpoint
+description = Managing SparQL access to the triple store.
+core = 6.x
+package = "WissKI"
+dependencies[] = wisski_store

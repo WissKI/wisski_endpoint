@@ -1,0 +1,112 @@
+<?php
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_endpoint_perm() {
+  return array_merge(array('wisski administrate endpoint'), array_keys(wisski_endpoint_get_access_perms()));
+}
+
+
+/**
+* @author Martin Scholz
+*/ 
+function wisski_endpoint_menu() {
+
+  $items['wisski/endpoint'] = array(
+    'type' => MENU_CALLBACK,
+    'title' => 'SparQL Endpoint',
+    'page callback' => 'wisski_endpoint_serve',
+    'access callback' => '_wisski_endpoint_check_access',
+    'file' => 'wisski_endpoint.inc',
+  );
+  $items['admin/settings/wisski/endpoint'] = array(
+    'title' => 'SparQL Endpoint',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('wisski_endpoint_admin_settings'),
+    'access arguments' => array('wisski administrate endpoint'),
+    'file' => 'wisski_endpoint.inc',
+  );
+
+  return $items;
+
+}
+
+
+/** Make a permission for each SPARQL query verb
+* @return array of permission => query verb
+*
+* @author Martin Scholz
+* 
+*/
+function wisski_endpoint_get_access_perms() {
+  $query_forms = array('select', 'construct', 'ask', 'describe', 'load', 'insert', 'delete', 'dump');
+  $perms = array();
+  foreach ($query_forms as $f) {
+    $perms['wisski endpoint supports ' . $f] = array($f);
+  }
+  return $perms;
+}
+
+
+
+/**Check if user has access to at least one SPARQL verb
+* (Whether it is the right verb will be checked by the store itself)
+*
+* @author Martin Scholz
+* 
+*/
+function _wisski_endpoint_check_access() {
+  
+  $verbs = _wisski_endpoint_access_verbs();
+  return !empty($verbs);
+  
+}
+
+
+/**Determine which sparql verbs may be used by user 
+* 
+*
+* @author Martin Scholz
+* 
+*/
+function _wisski_endpoint_access_verbs() {
+  
+  static $verbs = NULL;
+
+  if ($verbs === NULL) {
+    
+    $verbs = array();
+    $keys = array();
+    
+    // collect verbs by keys
+    $read_key = variable_get('wisski_endpoint_read_key', '');
+    $write_key = variable_get('wisski_endpoint_write_key', '');
+    $read_verbs = array('select', 'construct', 'ask', 'describe', 'dump');
+    $write_verbs = array('load', 'insert', 'delete');
+
+    $key = (isset($_GET['key'])) ? ($_GET['key']) : ((isset($_POST['key'])) ? $_POST['key'] : NULL);
+
+    if (!empty($key)) {
+      if (!empty($read_key) && $read_key = $key) $verbs = array_merge($verbs, $read_verbs);
+      if (!empty($write_key) && $write_key = $key) $verbs = array_merge($verbs, $write_verbs);
+    }
+
+    // collect verbs by permissions
+    foreach (wisski_endpoint_get_access_perms() as $perm => $perm_verbs) {
+      if (user_access($perm)) $verbs = array_merge($verbs, $perm_verbs);
+    }
+
+    $verbs = array_unique($verbs);
+
+  }
+
+  return $verbs;
+
+}
+
+
+
+
