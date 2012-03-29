@@ -13,3 +13,11 @@ enables all SPARQL verbs for reading/writing.
 authenticated users must somehow provide their credentials / session id.
 You may like to take a look at some other modules that will allow for
 alternative ways of identification, like securesite module.
+
+License
+=============================
+
+(c) WissKI Project, http://wiss-ki.eu
+
+This software is licensed under the same terms as Drupal (GNU GPLv2 or later).
+You should have recieved a copy of the license as LICENSE.txt.
